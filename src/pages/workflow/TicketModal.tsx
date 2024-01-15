@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { TicketMenu } from "./components/TicketMenu/TicketMenu";
 import { InspectorRoutes } from "../inspector/InspectorRoutes";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChangeEnvParams, RoutingEnvs } from "../../routing/routing.envs";
 import { RoutingMountPoint } from "../../routing/prefix-ctx/RoutingMountPoint";
 import { useAppNavigation } from "../../routing/useAppNavigation";
@@ -14,18 +14,49 @@ const getCustomerIdFromTicket = (ticketId: string) => {
 type RouteSection = "proposal" | "inspector";
 
 export function TicketModal() {
-  const { workflowId = "", ticketId = "" } = useParams();
+  const {
+    workflowId = "",
+    ticketId = "",
+    contactId: routeContactId,
+  } = useParams();
   const customerId = getCustomerIdFromTicket(ticketId ?? "");
   const [routeSection] = useState<RouteSection>("inspector");
-  const { handleCrossEnvNav } = useAppNavigation();
-
-  const env = useMemo(
-    (): ChangeEnvParams => ({
-      env: RoutingEnvs.Ticket,
-      params: { ticketId, workflowId },
-    }),
-    [workflowId, ticketId],
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    null,
   );
+
+  useEffect(() => {
+    if (routeContactId) setSelectedContactId(routeContactId);
+  }, [routeContactId]);
+
+  const contactId = selectedContactId ?? routeContactId;
+
+  const handleContact = (id: string) => {
+    handleCrossEnvNav(
+      {
+        envParams: {
+          env: RoutingEnvs.TicketContact,
+          params: { workflowId, ticketId, contactId: id },
+        },
+      },
+      true,
+    );
+  };
+
+  const env = useMemo((): ChangeEnvParams => {
+    if (!contactId) {
+      return {
+        env: RoutingEnvs.Ticket,
+        params: { ticketId, workflowId },
+      };
+    }
+    return {
+      env: RoutingEnvs.TicketContact,
+      params: { ticketId, workflowId, contactId },
+    };
+  }, [workflowId, ticketId, contactId]);
+
+  const { handleCrossEnvNav } = useAppNavigation(env);
 
   const handleOpenInspectorProfile = () => {
     handleCrossEnvNav({
@@ -62,12 +93,18 @@ export function TicketModal() {
               >
                 Ir para perfil
               </button>
+              <button
+                className="text-blue-600"
+                onClick={() => handleContact("14")}
+              >
+                Contact 14
+              </button>
             </div>
             <TicketMenu />
           </div>
 
           {routeSection === "inspector" && (
-            <InspectorRoutes customerId={customerId} />
+            <InspectorRoutes customerId={customerId} contactId={contactId} />
           )}
         </div>
       </div>

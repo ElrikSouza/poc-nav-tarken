@@ -3,7 +3,7 @@ import { RoutingPrefixCtx } from "./prefix-ctx/routing-prefix.ctx";
 import { ChangeEnvParams } from "./routing.envs";
 import { InspectorKeys } from "./envs/inspector.keys";
 import { applyRoutingParams, joinPath } from "./routing.utils";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type SuffixNav = {
   key: InspectorKeys;
@@ -32,9 +32,26 @@ const buildGetSameEnvUrlFn = (prefix: string) => (suffix: SuffixNav) => {
   return joinPath(prefix, builtSuffix);
 };
 
-export function useAppNavigation() {
+const replacePrefix = ({
+  currentPathname,
+  previousPrefix,
+  newPrefix,
+}: {
+  currentPathname: string;
+  previousPrefix: string;
+  newPrefix: string;
+}) => {
+  console.log({ currentPathname, previousPrefix, newPrefix });
+  return `${newPrefix}${currentPathname.slice(previousPrefix.length)}`;
+};
+
+export function useAppNavigation(overrideEnv?: ChangeEnvParams) {
   const navigate = useNavigate();
-  const { prefix } = useContext(RoutingPrefixCtx);
+  const { pathname } = useLocation();
+  const { prefix: ctxPrefix } = useContext(RoutingPrefixCtx);
+  const prefix = !overrideEnv
+    ? ctxPrefix
+    : applyRoutingParams(overrideEnv?.env, overrideEnv?.params);
 
   const handleGetSameEnvUrl = useMemo(
     () => buildGetSameEnvUrlFn(prefix),
@@ -42,11 +59,23 @@ export function useAppNavigation() {
   );
 
   const handleCrossEnvNav = useCallback(
-    (params: CrossEnvNavParams) => {
+    (params: CrossEnvNavParams, replace = false) => {
+      if (replace) {
+        const url = replacePrefix({
+          previousPrefix: prefix,
+          currentPathname: pathname,
+          newPrefix: applyRoutingParams(
+            params.envParams.env,
+            params.envParams.params,
+          ),
+        });
+        navigate(url);
+        return;
+      }
       const url = getCrossEnvUrl(params);
       navigate(url);
     },
-    [navigate],
+    [navigate, pathname, prefix],
   );
 
   const handleSameEnvNav = useCallback(

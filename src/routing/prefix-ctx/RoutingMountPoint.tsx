@@ -11,6 +11,7 @@ export const RoutingMountPoint = ({
   children: ReactNode;
 }) => {
   const prefix = useMemo(() => applyRoutingParams(env.env, env.params), [env]);
+  console.log({ prefix });
 
   return (
     <RoutingPrefixCtx.Provider value={{ prefix }}>

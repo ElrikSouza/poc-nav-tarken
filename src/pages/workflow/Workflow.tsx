@@ -33,6 +33,10 @@ export const Workflow = () => {
 
       <Routes>
         <Route path="ticket/:ticketId/*" element={<TicketModal />} />
+        <Route
+          path="ticket/:ticketId/contato/:contactId/*"
+          element={<TicketModal />}
+        />
       </Routes>
     </div>
   );
