@@ -1,1 +1,1 @@
-export type InspectorViewMode = "customer" | "contact";
+export type InspectorViewMode2 = "customer" | "contact";

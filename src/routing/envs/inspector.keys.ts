@@ -5,4 +5,8 @@ export const enum InspectorKeys {
   Irpf = "irpf",
   IrpfStatementDetail = "irpf/statement/:statementId",
   WorkflowSelection = "workflow",
+  Cashflow = "cashflow",
+  Debt = "debt",
+  Summary = "summary",
+  CPR = "cpr",
 }

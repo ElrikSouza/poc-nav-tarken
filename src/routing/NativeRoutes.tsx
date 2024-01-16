@@ -1,7 +1,8 @@
 import { Route, Routes } from "react-router-dom";
-import { InspectorMountPoint } from "../pages/inspector/InspectorMountPoint";
 import { Workflow } from "../pages/workflow/Workflow";
 import { WorkflowSelector } from "../pages/workflow/WorkflowSelector";
+import { CustomerList } from "../pages/CustomerList";
+import { InspectorMenu } from "../pages/inspector/InspectorMenu";
 
 /**
  * Those are the normal routes of the application. They are not meant to be mounted
@@ -10,15 +11,13 @@ import { WorkflowSelector } from "../pages/workflow/WorkflowSelector";
 export function NativeRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<CustomerList />} />
       <Route
-        path="/insp/cliente/:customerId/integrante/:contactId/*"
-        element={<InspectorMountPoint />}
+        path="/insp/cliente/:customerId/integrante/:contactId/pid/:personProfileId/*"
+        element={<InspectorMenu />}
       />
 
-      <Route
-        path="/insp/cliente/:customerId/*"
-        element={<InspectorMountPoint />}
-      />
+      <Route path="/insp/cliente/:customerId/*" element={<InspectorMenu />} />
 
       <Route path="/workflow/:workflowId/*" element={<Workflow />} />
 

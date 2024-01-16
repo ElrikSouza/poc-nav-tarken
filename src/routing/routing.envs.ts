@@ -1,6 +1,6 @@
 export const enum RoutingEnvs {
   InspCustomer = "/insp/cliente/:customerId/",
-  InspContact = "/insp/cliente/:customerId/integrante/:contactId",
+  InspContact = "/insp/cliente/:customerId/integrante/:contactId/pid/:personProfileId",
   Ticket = "/workflow/:workflowId/ticket/:ticketId",
   TicketContact = "/workflow/:workflowId/ticket/:ticketId/contato/:contactId",
   Workflow = "/workflow/:workflowId",
@@ -14,7 +14,11 @@ export type ChangeEnvParams =
     }
   | {
       env: RoutingEnvs.InspContact;
-      params: { customerId: string; contactId: string };
+      params: {
+        customerId: string;
+        contactId: string;
+        personProfileId: string;
+      };
     }
   | {
       env: RoutingEnvs.Ticket;

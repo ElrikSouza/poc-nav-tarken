@@ -15,6 +15,8 @@ type CrossEnvNavParams = {
   suffixParams?: SuffixNav;
 };
 
+export type SameEnvNavFn = (params: SuffixNav) => void;
+
 const getCrossEnvUrl = ({ envParams, suffixParams }: CrossEnvNavParams) => {
   const builtPrefix = applyRoutingParams(envParams.env, envParams.params);
 
@@ -41,8 +43,7 @@ const replacePrefix = ({
   previousPrefix: string;
   newPrefix: string;
 }) => {
-  console.log({ currentPathname, previousPrefix, newPrefix });
-  return `${newPrefix}${currentPathname.slice(previousPrefix.length)}`;
+  return joinPath(newPrefix, currentPathname.slice(previousPrefix.length));
 };
 
 export function useAppNavigation(overrideEnv?: ChangeEnvParams) {
