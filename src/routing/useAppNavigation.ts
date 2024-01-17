@@ -46,6 +46,9 @@ const replacePrefix = ({
   return joinPath(newPrefix, currentPathname.slice(previousPrefix.length));
 };
 
+/**
+ * The overrideEnv allows the navigation hooks to be used inside mount point components as they are hosting the prefix provider and so don't have access to its data.
+ * */
 export function useAppNavigation(overrideEnv?: ChangeEnvParams) {
   const navigate = useNavigate();
   const { pathname } = useLocation();

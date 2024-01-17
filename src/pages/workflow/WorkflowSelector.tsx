@@ -14,21 +14,17 @@ export const WorkflowSelector = () => {
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full p-2">
       <div className="flex gap-3">
-        <div
-          className="h-16 w-32 bg-green-300 p-2"
-          onClick={() => openWorkflow("1")}
-        >
-          <div className="text-green-50">Workflow 1</div>
-        </div>
-
-        <div
-          className="h-16 w-32 bg-green-300 p-2"
-          onClick={() => openWorkflow("2")}
-        >
-          <div className="text-green-50">Workflow 2</div>
-        </div>
+        {["1", "2", "3"].map((num) => (
+          <button
+            className="h-16 w-32 bg-green-700 p-2 rounded-md"
+            onClick={() => openWorkflow(num)}
+            key={num}
+          >
+            <div className="text-green-50">Workflow {num}</div>
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -6,22 +6,11 @@ import { useAppNavigation } from "../../routing/useAppNavigation";
 import { CustomerContactSwitch } from "./CustomerContactSwitch";
 import { InspectorRoutes } from "./InspectorRoutes";
 import { RoutingMountPoint } from "../../routing/prefix-ctx/RoutingMountPoint";
-import { InspectorViewMode } from "./inspector.types";
 import { useMenu } from "../../hooks/useMenu";
 import { InspectorNav } from "./InspectorNav";
-
-const getViewMode = ({
-  isMonoContact,
-  contactId,
-}: {
-  isMonoContact: boolean;
-  contactId: string | undefined;
-}): InspectorViewMode => {
-  if (contactId) return InspectorViewMode.Contact;
-  return isMonoContact
-    ? InspectorViewMode.CustomerMonoContact
-    : InspectorViewMode.CustomerMultiContact;
-};
+import { CustomerInfoLoading } from "./CustomerInfoLoading";
+import { CustomerInfo } from "./CustomerInfo";
+import { getViewMode } from "./utils";
 
 export const InspectorMenu = () => {
   const { customerId, contactId, personProfileId } = useParams();
@@ -52,7 +41,8 @@ export const InspectorMenu = () => {
   // env override because this component is outside the prefix ctx
   const { handleCrossEnvNav, handleSameEnvNav } = useAppNavigation(env);
 
-  // change env to contact env
+  // if the app is in the inspector customer environment, but the customer has only one contact,
+  // change environment to inspector contact
   useEffect(() => {
     if (isMonoContact) {
       const contactId = customer.contact[0].id;
@@ -130,41 +120,56 @@ export const InspectorMenu = () => {
 
   return (
     <div className="w-full h-full flex">
-      <div className="flex flex-col w-72 p-2">
-        <button className="px-1 py-2 hover:bg-sky-800" onClick={goHome}>
-          Voltar
-        </button>
-        {isMonoContact && !isLoading && <div>Customer: {customer.name}</div>}
-        {!isMonoContact && !isLoading && (
-          <div>
-            <CustomerContactSwitch
-              isCustomerMode={isInCustomerMode}
-              onToggleMode={onToggleMode}
-            />
-            {!isInCustomerMode && (
-              <>
-                Contatos
-                <select
-                  value={contactId}
-                  onChange={(e) => onSelectContact(e.target.value)}
-                >
-                  {customer?.contact.map((c) => (
-                    <option value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </>
-            )}
-          </div>
-        )}
-        {!isLoadingMenu && (
-          <InspectorNav
-            handleSameEnvNav={handleSameEnvNav}
-            menuEntries={menu}
-          />
-        )}
-      </div>
       <RoutingMountPoint env={env}>
-        <div className="flex-1 h-full bg-sky-50">
+        <div className="flex flex-col w-72 p-2 gap-2 border-l border-l-slate-400 shadow-slate-600 shadow-sm">
+          <button
+            className="px-1 py-2 hover:bg-sky-800 hover:text-sky-50 text-left rounded-md text-sm font-semibold text-zinc-500"
+            onClick={goHome}
+          >
+            {"<-"} Voltar
+          </button>
+
+          {isLoading ? (
+            <CustomerInfoLoading />
+          ) : (
+            <CustomerInfo name={customer?.name ?? "-"} />
+          )}
+
+          {!isMonoContact && !isLoading && (
+            <div className="flex flex-col gap-2">
+              <CustomerContactSwitch
+                isCustomerMode={isInCustomerMode}
+                onToggleMode={onToggleMode}
+              />
+
+              {!isInCustomerMode && (
+                <div className="flex flex-col gap-0.5">
+                  <div className="font-medium text-slate-400 text-sm">
+                    Selecionar integrante
+                  </div>
+
+                  <select
+                    className="w-full p-2 rounded-md block bg-zinc-200"
+                    value={contactId}
+                    onChange={(e) => onSelectContact(e.target.value)}
+                  >
+                    {customer?.contact.map((c) => (
+                      <option value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isLoadingMenu && (
+            <InspectorNav
+              handleSameEnvNav={handleSameEnvNav}
+              menuEntries={menu}
+            />
+          )}
+        </div>
+        <div className="flex-1 h-full">
           <InspectorRoutes
             isLoadingCustomerInfo={isLoading}
             contactId={contactId}

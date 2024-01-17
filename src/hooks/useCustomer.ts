@@ -28,11 +28,12 @@ export const customers = <Customer[]>[
   },
 ];
 
-export const useCustomer = (customerId: string) => {
+export const useCustomer = (customerId: string | null) => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!customerId) return;
     new Promise<void>((resolve) => {
       setTimeout(() => {
         setCustomer(customers.find((c) => c.id === customerId) ?? null);

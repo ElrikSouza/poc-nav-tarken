@@ -1,110 +1,130 @@
-import { useParams } from "react-router-dom";
 import { TicketMenu } from "./components/TicketMenu/TicketMenu";
-import { InspectorRoutes } from "../inspector/InspectorRoutes";
+import { RoutingMountPoint } from "../../routing/prefix-ctx/RoutingMountPoint";
+import { useParams } from "react-router-dom";
+import { useTicket } from "../../hooks/useTicket";
+import { useCustomer } from "../../hooks/useCustomer";
+import { getViewMode } from "../inspector/utils";
 import { useEffect, useMemo, useState } from "react";
 import { ChangeEnvParams, RoutingEnvs } from "../../routing/routing.envs";
-import { RoutingMountPoint } from "../../routing/prefix-ctx/RoutingMountPoint";
+import { useMenu } from "../../hooks/useMenu";
 import { useAppNavigation } from "../../routing/useAppNavigation";
-import { InspectorKeys } from "../../routing/envs/inspector.keys";
-
-const getCustomerIdFromTicket = (ticketId: string) => {
-  return `fake-customer-${ticketId}`;
-};
-
-type RouteSection = "proposal" | "inspector";
+import { InspectorRoutes } from "../inspector/InspectorRoutes";
+import { InspectorViewMode } from "../inspector/inspector.types";
+import { CustomerInfoLoading } from "../inspector/CustomerInfoLoading";
+import { CustomerInfo } from "../inspector/CustomerInfo";
+import { InspectorNav } from "../inspector/InspectorNav";
 
 export function TicketModal() {
   const {
     workflowId = "",
     ticketId = "",
-    contactId: routeContactId,
+    contactId,
+    personProfileId,
   } = useParams();
-  const customerId = getCustomerIdFromTicket(ticketId ?? "");
-  const [routeSection] = useState<RouteSection>("inspector");
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(
-    null,
+  const { ticket } = useTicket({ ticketId });
+  const { customer, isLoading: isLoadingCustomer } = useCustomer(
+    ticket?.relatedCustomerId ?? null,
   );
-
-  useEffect(() => {
-    if (routeContactId) setSelectedContactId(routeContactId);
-  }, [routeContactId]);
-
-  const contactId = selectedContactId ?? routeContactId;
-
-  const handleContact = (id: string) => {
-    handleCrossEnvNav(
-      {
-        envParams: {
-          env: RoutingEnvs.TicketContact,
-          params: { workflowId, ticketId, contactId: id },
-        },
-      },
-      true,
-    );
-  };
+  const isMonoContact = customer?.contact.length === 1;
+  const viewMode = getViewMode({ isMonoContact, contactId });
+  const { menu, isLoading: isLoadingMenu } = useMenu({ viewMode });
 
   const env = useMemo((): ChangeEnvParams => {
-    if (!contactId) {
+    if (contactId) {
       return {
-        env: RoutingEnvs.Ticket,
-        params: { ticketId, workflowId },
+        env: RoutingEnvs.TicketContact,
+        params: {
+          personProfileId: personProfileId ?? "",
+          contactId: contactId ?? "",
+          ticketId,
+          workflowId,
+        },
       };
     }
-    return {
-      env: RoutingEnvs.TicketContact,
-      params: { ticketId, workflowId, contactId },
-    };
-  }, [workflowId, ticketId, contactId]);
 
-  const { handleCrossEnvNav } = useAppNavigation(env);
+    return { env: RoutingEnvs.Ticket, params: { workflowId, ticketId } };
+  }, [ticketId, workflowId, personProfileId, contactId]);
 
-  const handleOpenInspectorProfile = () => {
-    handleCrossEnvNav({
-      envParams: { env: RoutingEnvs.InspCustomer, params: { customerId } },
-      suffixParams: { key: InspectorKeys.PropertySeasons },
-    });
-  };
+  const { handleCrossEnvNav, handleSameEnvNav } = useAppNavigation(env);
 
-  const handleClose = () => {
+  useEffect(() => {
+    if (isMonoContact) {
+      const contactId = customer.contact[0].id;
+      const personProfileId = customer.contact[0].personProfileId;
+      handleCrossEnvNav(
+        {
+          envParams: {
+            env: RoutingEnvs.TicketContact,
+            params: {
+              workflowId,
+              ticketId,
+              contactId,
+              personProfileId,
+            },
+          },
+        },
+        true,
+      );
+    }
+    // eslint-disable-next-line
+  }, [isMonoContact, customer, ticketId, workflowId]);
+
+  const handleClose = () =>
     handleCrossEnvNav({
       envParams: { env: RoutingEnvs.Workflow, params: { workflowId } },
     });
-  };
+
+  const handleClickInspProfile = () =>
+    handleCrossEnvNav({
+      envParams: {
+        env: RoutingEnvs.InspCustomer,
+        params: { customerId: ticket?.id ?? "" },
+      },
+    });
 
   return (
     <RoutingMountPoint env={env}>
       <div className="h-screen w-screen top-0 left-0 fixed z-50 flex flex-col rounded-xl shadow-md bg-slate-50">
-        <div className="flex justify-between">
+        <div className="flex justify-between border-b-slate-500 border-b p-2">
           <div className="text-lg p-2 w-full">
             Ticket - {workflowId} - {ticketId}
           </div>
           <button className="hover:text-blue-400" onClick={handleClose}>
-            Close
+            X
           </button>
         </div>
 
         <div className="flex w-full h-full">
-          <div className="flex flex-col">
-            <div className="flex flex-col text-red-500">
-              Customer {customerId}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1 w-72">
+              {isLoadingCustomer ? (
+                <CustomerInfoLoading />
+              ) : (
+                <CustomerInfo name={customer?.name ?? "-"} />
+              )}
+
               <button
-                className="text-blue-600"
-                onClick={handleOpenInspectorProfile}
+                className="text-blue-600 hover:text-blue-50 hover:bg-blue-600 rounded-md w-full p-1 text-sm font-semibold text-left"
+                onClick={handleClickInspProfile}
               >
-                Ir para perfil
-              </button>
-              <button
-                className="text-blue-600"
-                onClick={() => handleContact("14")}
-              >
-                Contact 14
+                Acessar perfil no inspector
               </button>
             </div>
-            <TicketMenu />
+
+            <InspectorNav
+              handleSameEnvNav={handleSameEnvNav}
+              menuEntries={menu}
+            />
           </div>
 
-          {routeSection === "inspector" && (
-            <InspectorRoutes customerId={customerId} contactId={contactId} />
+          {!!ticket?.relatedCustomerId && (
+            <InspectorRoutes
+              viewMode={viewMode}
+              contactId={contactId}
+              customerId={ticket?.relatedCustomerId}
+              personProfileId={personProfileId}
+              isLoadingCustomerInfo={isLoadingCustomer}
+            />
           )}
         </div>
       </div>
