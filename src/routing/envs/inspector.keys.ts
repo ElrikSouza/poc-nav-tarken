@@ -9,4 +9,5 @@ export const enum InspectorKeys {
   Debt = "debt",
   Summary = "summary",
   CPR = "cpr",
+  SCR = "scr",
 }

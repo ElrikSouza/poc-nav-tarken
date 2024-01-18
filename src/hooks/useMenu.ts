@@ -12,6 +12,10 @@ const common = <MenuEntry[]>[
     label: "Safras",
     key: InspectorKeys.PropertySeasons,
   },
+  {
+    label: "IRPF",
+    key: InspectorKeys.Irpf,
+  },
 ];
 
 const customerMenu = <MenuEntry[]>[
@@ -27,7 +31,7 @@ const customerMenu = <MenuEntry[]>[
 
 const contact = <MenuEntry[]>[
   { label: "CPR", key: InspectorKeys.CPR },
-  { label: "SCR", key: InspectorKeys.Debt },
+  { label: "SCR", key: InspectorKeys.SCR },
 ];
 
 export const useMenu = ({ viewMode }: { viewMode: InspectorViewMode }) => {

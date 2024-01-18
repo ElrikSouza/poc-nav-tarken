@@ -1,18 +1,17 @@
-import { TicketMenu } from "./components/TicketMenu/TicketMenu";
 import { RoutingMountPoint } from "../../routing/prefix-ctx/RoutingMountPoint";
 import { useParams } from "react-router-dom";
 import { useTicket } from "../../hooks/useTicket";
 import { useCustomer } from "../../hooks/useCustomer";
 import { getViewMode } from "../inspector/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ChangeEnvParams, RoutingEnvs } from "../../routing/routing.envs";
 import { useMenu } from "../../hooks/useMenu";
 import { useAppNavigation } from "../../routing/useAppNavigation";
 import { InspectorRoutes } from "../inspector/InspectorRoutes";
-import { InspectorViewMode } from "../inspector/inspector.types";
 import { CustomerInfoLoading } from "../inspector/CustomerInfoLoading";
 import { CustomerInfo } from "../inspector/CustomerInfo";
 import { InspectorNav } from "../inspector/InspectorNav";
+import { CustomerContactSwitch } from "../inspector/CustomerContactSwitch";
 
 export function TicketModal() {
   const {
@@ -27,7 +26,7 @@ export function TicketModal() {
   );
   const isMonoContact = customer?.contact.length === 1;
   const viewMode = getViewMode({ isMonoContact, contactId });
-  const { menu, isLoading: isLoadingMenu } = useMenu({ viewMode });
+  const { menu } = useMenu({ viewMode });
 
   const env = useMemo((): ChangeEnvParams => {
     if (contactId) {
@@ -46,6 +45,60 @@ export function TicketModal() {
   }, [ticketId, workflowId, personProfileId, contactId]);
 
   const { handleCrossEnvNav, handleSameEnvNav } = useAppNavigation(env);
+
+  const onToggleMode = () => {
+    const willBeCustomer = !!contactId;
+    if (willBeCustomer) {
+      handleCrossEnvNav(
+        {
+          envParams: {
+            env: RoutingEnvs.Ticket,
+            params: { ticketId, workflowId },
+          },
+        },
+        true,
+      );
+    } else {
+      const firstContact = customer?.contact[0];
+      if (!firstContact) return;
+      handleCrossEnvNav(
+        {
+          envParams: {
+            env: RoutingEnvs.TicketContact,
+            params: {
+              ticketId,
+              workflowId,
+              personProfileId: firstContact.personProfileId,
+              contactId: firstContact.id,
+            },
+          },
+        },
+        true,
+      );
+    }
+  };
+
+  const isInCustomerMode = !contactId;
+
+  const onSelectContact = (id: string) => {
+    const contact = customer?.contact.find((c) => c.id === id);
+    if (contact) {
+      handleCrossEnvNav(
+        {
+          envParams: {
+            env: RoutingEnvs.TicketContact,
+            params: {
+              ticketId,
+              workflowId,
+              contactId: id,
+              personProfileId: contact.personProfileId,
+            },
+          },
+        },
+        true,
+      );
+    }
+  };
 
   useEffect(() => {
     if (isMonoContact) {
@@ -109,6 +162,33 @@ export function TicketModal() {
               >
                 Acessar perfil no inspector
               </button>
+
+              {!isMonoContact && !isLoadingCustomer && (
+                <div className="flex flex-col gap-2">
+                  <CustomerContactSwitch
+                    isCustomerMode={isInCustomerMode}
+                    onToggleMode={onToggleMode}
+                  />
+
+                  {!isInCustomerMode && (
+                    <div className="flex flex-col gap-0.5">
+                      <div className="font-medium text-slate-400 text-sm">
+                        Selecionar integrante
+                      </div>
+
+                      <select
+                        className="w-full p-2 rounded-md block bg-zinc-200"
+                        value={contactId}
+                        onChange={(e) => onSelectContact(e.target.value)}
+                      >
+                        {customer?.contact.map((c) => (
+                          <option value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <InspectorNav

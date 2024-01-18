@@ -9,6 +9,7 @@ import { Loading } from "../../components/Loading";
 import { useAppNavigation } from "../../routing/useAppNavigation";
 import { InspRoutesCtxProvider } from "../utils/InspRoutesCtxProvider";
 import { ContactOnlyRoute } from "../utils/ContactOnlyRoute";
+import { InspectorIndexRoute } from "./InspectorIndexRoute";
 
 const PropertySeasonList = lazy(
   () => import("./property-seasons/PropertySeasonList"),
@@ -51,6 +52,8 @@ export const InspectorRoutes = ({
     >
       <Suspense fallback={<div>Carregando...</div>}>
         <Routes>
+          <Route index element={<InspectorIndexRoute />} />
+
           <Route path={InspectorKeys.Summary} element={<>summary</>} />
 
           <Route
@@ -85,6 +88,15 @@ export const InspectorRoutes = ({
             element={
               <ContactOnlyRoute>
                 <>cpr</>
+              </ContactOnlyRoute>
+            }
+          />
+
+          <Route
+            path={InspectorKeys.SCR}
+            element={
+              <ContactOnlyRoute>
+                <>scr</>
               </ContactOnlyRoute>
             }
           />
